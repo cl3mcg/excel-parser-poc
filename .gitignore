@@ -1,0 +1,5 @@
+# Exclude the node_modules directory and its content
+node_modules/
+
+# Exclude all temporary files that start with "~$"
+~$*
