@@ -1,9 +1,8 @@
 // Importing the necessary library
 const XLSX = require("xlsx")
 
-
 // Create a variable used to specify the path of the file to read and parse
-const filename = "./BookToValidate.xlsx"
+const filename = "./BookToValidate01.xlsx"
 
 // Create an objject containing options for the reading and parsing of the Excel file
 const opts = {

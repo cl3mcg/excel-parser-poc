@@ -13,6 +13,13 @@ To run this project, you will need the following:
 - Node.js
 - npm
 
+## Project structure
+
+This project has 2 main features.
+
+1. The content of `app01.js` is to run some basic Excel parsing to extract the background color of the cells and return which cells are considered as read-only (by TI-contract standards) and which can be editable.
+2. The content of `app02.js` is to parse a list of data consisting in a pseudo country names (approximative names, names with typos, country 2-letter codes, country 3-letter codes) and return the most likely cca2 country code.
+
 ## Getting Started
 
 ### Basics
@@ -41,7 +48,13 @@ npm install
 5. Run the project with the following command:
 
 ```
-node app.js
+node app01.js
+```
+
+or
+
+```
+node app02.js
 ```
 
 The project will parse the Excel file and output the results to the console.
@@ -49,7 +62,36 @@ The project will parse the Excel file and output the results to the console.
 ### Excel file
 
 Make sure to include the Excel file to parse in the root directory of the project.
-For the time being, it is necessary to manually input the file name and the tab name of the Excel file in the `app.js` file.
+For the time being, it is necessary to manually input the file name and the tab name of the Excel file in the `app01.js` or the `app02.js` file.
+The default file names expected by the app are `BookToValidate01.xlsx` and `BookToValidate02.xlsx`
+
+### General process
+
+The Excel Parser scripts are a set of Node.js scripts that use the `xlsx` and `exceljs` libraries to parse and analyze Excel files.
+
+#### app01.js
+
+The `app01.js` script is used to parse an Excel file and determine which cells are editable and which are read-only. It does this by analyzing the background color of the cells.
+
+The script first imports the `xlsx` library and specifies the path of the file to read and parse. It then creates an object containing options for the reading and parsing of the Excel file, and uses the `XLSX.readFile()` method to read the file and store the parsed data in a variable.
+
+Next, the script breaks down the different components of the parsed Excel file and stores them in variables. It then creates arrays to store the background color of read-only cells and headers, and sets up a set of variables to store the results.
+
+The script then loops over all the cells in the target tab and analyzes their properties to determine whether they are editable or read-only. If a cell is determined to be editable, it is added to the `listOfEditableCells` array. If a cell is determined to be a header, it is added to the `listOfHeaderCells` array. If a cell is determined to be read-only, it is added to the `listOfRestrictedCells` array.
+
+Finally, the script logs the results to the console.
+
+#### app02.js
+
+The `app02.js` script is used to parse an Excel file and clean the data contained in it. It does this by using a special dataset of country names and country codes, and a fuzzy string matching library called `fuzzyset.js`.
+
+The script first imports the `xlsx`, `exceljs`, `fuzzyset.js`, and country dataset libraries, and specifies the path of the file to read and parse. It then creates a variable to store the name of the target tab, and uses the `XLSX.readFile()` method to read the file and store the parsed data in a variable.
+
+Next, the script uses the `XLSX.utils.sheet_to_json()` method to extract the data from the Excel file and store it in a variable. It then sets up the `fuzzyset.js` library to clean the data.
+
+The script then processes the cleaning by mapping over the data and using the `fuzzyset.js` library to match the country names in the data with the country names in the dataset. If a match is found, the script uses the dataset to get the corresponding country code and stores it in the data.
+
+Finally, the script creates a new Excel file using the `exceljs` library, adds a new worksheet to the file, and writes the cleaned data to the worksheet. It then saves the file to the disk, ready to be redistributed.
 
 ## Contact Information
 

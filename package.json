@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "country-data": "^0.0.31",
+    "exceljs": "^4.4.0",
+    "fuzzyset": "^1.0.7",
     "read-excel-file": "^5.8.1",
     "xlsx": "^0.18.5"
   }
