@@ -1,18 +1,21 @@
 {
-  "name": "validator",
-  "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "country-data": "^0.0.31",
-    "exceljs": "^4.4.0",
-    "fuzzyset": "^1.0.7",
-    "read-excel-file": "^5.8.1",
-    "xlsx": "^0.18.5"
-  }
+	"name": "validator",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@mistralai/mistralai": "^0.3.0",
+		"country-data": "^0.0.31",
+		"dotenv": "^16.4.5",
+		"exceljs": "^4.4.0",
+		"fuzzyset": "^1.0.7",
+		"read-excel-file": "^5.8.1",
+		"xlsx": "^0.18.5"
+	},
+	"type": "module"
 }
