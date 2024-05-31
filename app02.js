@@ -6,6 +6,7 @@ import Excel from "exceljs";
 import FuzzySet from "fuzzyset";
 import MistralClient from "@mistralai/mistralai";
 import countriesDataSet from "./assets/countries.json" assert { type: "json" };
+import headerNames_country from "./assets/headerNames_country.json" assert { type: "json" };
 const apiKey = process.env.MISTRAL_API_KEY
 const client = new MistralClient(apiKey);
 
@@ -18,6 +19,41 @@ const targetTab = "Book_01"
 // Extract the data from the Excel file.
 const workbookProvided = XLSX.readFile(filename);
 const data = XLSX.utils.sheet_to_json(workbookProvided.Sheets[targetTab]);
+
+// Create an array containing all the columns header names, without duplicate
+const allColumnsNamesArray = data.map(obj => Object.keys(obj)).flat()
+const uniqueSet = new Set(allColumnsNamesArray);
+const uniqueColumnsNamesArray = Array.from(uniqueSet);
+
+// Setting up a FuzzySet to perform matching based on probable country columns names.
+const fuzzySet_headerNames_country = new FuzzySet(headerNames_country);
+
+// Performing a comparison between the FuzzySet and the Excel file column names
+// The opration below is creating an array containing objects representing each column in the Excel file.
+// For each object, a probability score is calculated based on the similarities of the name of the column and anything
+// that would identify this column as a 'Country' column.
+const probabilityCalculation = uniqueColumnsNamesArray.map((value) => fuzzySet_headerNames_country.get(value.toLowerCase()))
+const probabilityResult = probabilityCalculation.map(el => new Object({
+    columnIndex: probabilityCalculation.indexOf(el),
+    columnName: uniqueColumnsNamesArray[probabilityCalculation.indexOf(el)], // Another way to better understand this is 'columnName: uniqueColumnsNamesArray[this.columnIndex]' but this is not accessible in arrow functions.
+    bestProbabilityResult: !el ? 0 : Math.max(...el.flat().filter(val => typeof val === 'number'))
+}))
+
+// Once the probabilityResult obtained, the returnTheMostProbableCountryColumns function is going to return the columns that are identified
+// to be the most likely to contain country data.
+// It is also possible to have multiple columns containing country data (Origin country and Destination country for example)
+// In this case the returnTheMostProbableCountryColumns function retruns an array that contains various objects, one for each column.
+// In any way, the returnTheMostProbableCountryColumns returns an array containing one or more objects.
+const returnTheMostProbableCountryColumns = function () {
+    if (
+        probabilityResult.filter(el => el.bestProbabilityResult >= 0.975).length >= 2
+    ) {
+        return probabilityResult.filter(el => el.bestProbabilityResult >= 0.975)
+    }
+    return [probabilityResult.sort((el1, el2) => el2.bestProbabilityResult - el1.bestProbabilityResult)[0]]
+}
+
+const mostProbableCountryColumns = returnTheMostProbableCountryColumns()
 
 // Setting up various array of country spec data to be used as potential matches.
 const country_CommonNames = countriesDataSet.map(countryData => countryData.name.common);
@@ -92,15 +128,15 @@ const cleanedData = await Promise.all(
                 You should only return the 2-letter country code and nothing else, do not provide any comments nor notes, nor explanations of any kind.
                 If the string is unclear or you cannot confidently identify the country, return "null".
                 Here are some examples to help you understand:
-                
+
                     Input: "UnitStat."
                     Expected result from your side: US
                     Expected result's lenght: 2
-                
+
                     Input: "Pérou"
                     Expected result from your side: PE
                     Expected result's lenght: 2
-                
+
                     Input: "cihna"
                     Expected result from your side: CN
                     Expected result's lenght: 2
@@ -120,37 +156,37 @@ const cleanedData = await Promise.all(
                     Input: "IRL"
                     Expected result from your side: IE
                     Expected result's lenght: 2
-                
+
                     Input: "London"
                     Expected result from your side: GB
                     Expected result's lenght: 2
-                
+
                     Input: "澳门"
                     Expected result from your side: MO
                     Expected result's lenght: 2
-                
+
                     Input: "Marokko"
                     Expected result from your side: MA
                     Expected result's lenght: 2
-                
+
                     Input: "USA/CANADA"
                     Expected result from your side: null
-                
+
                     Input: "JdDkjdz84d"
                     Expected result from your side: null
-                
+
                     Input: "UA"
                     Expected result from your side: UA
                     Expected result's lenght: 2
-                
+
                     Input: "FRFOS"
                     Expected result from your side: FR
                     Expected result's lenght: 2
-                
+
                     Input: "Düsseldorf"
                     Expected result from your side: DE
                     Expected result's lenght: 2
-                
+
                 Your output will be used as an argument in a function, therefore, it is important to only return the 2-letter country code and nothing else, do not provide any comments nor notes, nor explanations of any kind, your response should only be 2 caracters long (or "null" when applicable) and it should not contain any single or double quotes.
                 Finally, here is the string you have to analyse: ${countryNameProvided}
             `}],
@@ -165,7 +201,7 @@ const cleanedData = await Promise.all(
 
             setTimeout(() => {
                 // Avoid reaching the request rate limit
-            }, 500);
+            }, 250);
         }
 
         if (!matchedCountry) {
