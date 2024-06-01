@@ -7,14 +7,14 @@ import FuzzySet from "fuzzyset";
 import MistralClient from "@mistralai/mistralai";
 import countriesDataSet from "./assets/countries.json" assert { type: "json" };
 import headerNames_country from "./assets/headerNames_country.json" assert { type: "json" };
-const apiKey = process.env.MISTRAL_API_KEY
+const apiKey = process.env.MISTRAL_API_KEY || null;
 const client = new MistralClient(apiKey);
 
 // Create a variable used to specify the path of the file to read and parse.
 const filename = "./BookToValidate03.xlsx"
 
 // Create a variable to store the name of the targetted tab.
-const targetTab = "Book_01"
+const targetTab = "Book_02"
 
 // Extract the data from the Excel file.
 const workbookProvided = XLSX.readFile(filename);
@@ -28,9 +28,9 @@ const uniqueColumnsNamesArray = Array.from(uniqueSet);
 // Setting up a FuzzySet to perform matching based on probable country columns names.
 const fuzzySet_headerNames_country = new FuzzySet(headerNames_country);
 
-// Performing a comparison between the FuzzySet and the Excel file column names
-// The opration below is creating an array containing objects representing each column in the Excel file.
-// For each object, a probability score is calculated based on the similarities of the name of the column and anything
+// Performing a comparison between the country header name's FuzzySet and the Excel file column names
+// The operation below is creating an array containing objects representing each column in the Excel file.
+// For each object, a probability score from 0 to 1 is calculated based on the similarities of the name of the column and anything
 // that would identify this column as a 'Country' column.
 const probabilityCalculation = uniqueColumnsNamesArray.map((value) => fuzzySet_headerNames_country.get(value.toLowerCase()))
 const probabilityResult = probabilityCalculation.map(el => new Object({
@@ -41,7 +41,7 @@ const probabilityResult = probabilityCalculation.map(el => new Object({
 
 // Once the probabilityResult obtained, the returnTheMostProbableCountryColumns function is going to return the columns that are identified
 // to be the most likely to contain country data.
-// It is also possible to have multiple columns containing country data (Origin country and Destination country for example)
+// It is also possible to have multiple columns containing country data (Origin country **and** Destination country for example)
 // In this case the returnTheMostProbableCountryColumns function retruns an array that contains various objects, one for each column.
 // In any way, the returnTheMostProbableCountryColumns returns an array containing one or more objects.
 const returnTheMostProbableCountryColumns = function () {
@@ -54,8 +54,21 @@ const returnTheMostProbableCountryColumns = function () {
 }
 
 const mostProbableCountryColumns = returnTheMostProbableCountryColumns()
+console.log('mostProbableCountryColumns', mostProbableCountryColumns)
 
-console.log(mostProbableCountryColumns)
+// Ultimatly, the mostProbableCountryColumns variable output has the following structure.
+// [
+//     {
+//       columnIndex: 1,
+//       columnName: 'Country of Origin',
+//       bestProbabilityResult: 1
+//     },
+//     {
+//       columnIndex: 2,
+//       columnName: 'Dest Country',
+//       bestProbabilityResult: 1
+//     }
+// ]
 
 // Setting up various array of country spec data to be used as potential matches.
 const country_CommonNames = countriesDataSet.map(countryData => countryData.name.common);
@@ -73,66 +86,72 @@ const fuzzySet_cca3 = new FuzzySet(country_cca3);
 const fuzzySet_capital = new FuzzySet(country_capital);
 const fuzzySet_altSpellings = new FuzzySet(country_altSpellings);
 
-
 // The function below is going to clean the country data and return an array of objects containing the cleaned data and the source of the data.
 // The function is looping over the columns that have been identified as containing some country data and is cleaning the data based on various FuzzySets.
 // The source of the data is used to identify the original model that was used to clean the data and to be able to provide a more accurate result.
 const cleanedCountryCodes = async function () {
     const arrayOfResults = [];
     for (const column of mostProbableCountryColumns) {
-
         // Processing the cleaning.
-        await Promise.all(
-            data.map(async (row) => {
-                const columnHeaderName = column.columnName;
-                const countryNameProvided = row[`${columnHeaderName}`].trim().toLowerCase(); // assuming 'Country' is the column name
-                let matchedCountry = null
-                if (fuzzySet_CommonNames.get(countryNameProvided) && fuzzySet_CommonNames.get(countryNameProvided).length > 0 && fuzzySet_CommonNames.get(countryNameProvided)[0][0] > 0.6) {
-                    matchedCountry = {
-                        country: fuzzySet_CommonNames.get(countryNameProvided),
-                        source: 'common'
-                    }
-                } else if (fuzzySet_OfficialNames.get(countryNameProvided) && fuzzySet_OfficialNames.get(countryNameProvided).length > 0 && fuzzySet_OfficialNames.get(countryNameProvided)[0][0] > 0.6) {
-                    matchedCountry = {
-                        country: fuzzySet_OfficialNames.get(countryNameProvided),
-                        source: 'official'
-                    }
-                } else if (countryNameProvided.length === 2 && fuzzySet_cca2.get(countryNameProvided) && fuzzySet_cca2.get(countryNameProvided).length > 0 && fuzzySet_cca2.get(countryNameProvided)[0][0] > 0.6) {
-                    matchedCountry = {
-                        country: fuzzySet_cca2.get(countryNameProvided),
-                        source: 'cca2'
-                    }
-                } else if (fuzzySet_cca3.get(countryNameProvided) && fuzzySet_cca3.get(countryNameProvided).length > 0 && fuzzySet_cca3.get(countryNameProvided)[0][0] > 0.6) {
-                    matchedCountry = {
-                        country: fuzzySet_cca3.get(countryNameProvided),
-                        source: 'cca3'
-                    }
-                } else if (fuzzySet_capital.get(countryNameProvided) && fuzzySet_capital.get(countryNameProvided).length > 0 && fuzzySet_capital.get(countryNameProvided)[0][0] > 0.6) {
-                    matchedCountry = {
-                        country: fuzzySet_capital.get(countryNameProvided),
-                        source: 'capital'
-                    }
-                } else if (fuzzySet_altSpellings.get(countryNameProvided) && fuzzySet_altSpellings.get(countryNameProvided).length > 0 && fuzzySet_altSpellings.get(countryNameProvided)[0][0] > 0.6) {
-                    matchedCountry = {
-                        country: fuzzySet_altSpellings.get(countryNameProvided),
-                        source: 'altSpelling'
-                    }
-                }
+        // By default, the first cleaning step is going to attempt to match the Excel data with the various country Fuzzyset.
+        for (const row of data) {
+            const columnHeaderName = column.columnName;
+            const countryNameProvided = row[`${columnHeaderName}`].trim().toLowerCase(); // The data provided in the Excel is trimmed and lowercased to ensure consistency and to improve the matching accuracy.
+            console.log('Currently processing the input: ', countryNameProvided);
+            // Setting up the result object that will be pushed to the arrayOfResults array.
+            // This result object will contain the data processed by the 3 cleaning steps below and the source of the data.
+            const result = {
+                columnName: column.columnName,
+                initialData: row[`${columnHeaderName}`].trim(),
+                correspondance: null,
+                guessedCountry: null,
+                guessedCountryCode: null,
+                source: null
+            };
 
-                const result = {
-                    columnName: column.columnName,
-                    initialData: row[`${columnHeaderName}`].trim(),
-                    correspondance: null,
-                    guessedCountry: null,
-                    guessedCountryCode: null,
-                    source: null
-                }
+            // Below, the matchedCountry variable is going to be used to store the result of the matching process.
+            // By default, its value is set to null. If a match is found, the matchedCountry variable will be updated with the result of the matching process.
+            let matchedCountry = null;
 
-                if (!matchedCountry) {
-                    const chatResponse = await client.chat({
-                        model: 'mistral-large-latest',
-                        messages: [{
-                            role: 'user', content: `
+            // The first cleaning step is going to attempt to match the Excel data with the various country Fuzzyset.
+            if (fuzzySet_CommonNames.get(countryNameProvided) && fuzzySet_CommonNames.get(countryNameProvided).length > 0 && fuzzySet_CommonNames.get(countryNameProvided)[0][0] >= 0.7) {
+                matchedCountry = {
+                    country: fuzzySet_CommonNames.get(countryNameProvided),
+                    source: 'common'
+                };
+            } else if (fuzzySet_OfficialNames.get(countryNameProvided) && fuzzySet_OfficialNames.get(countryNameProvided).length > 0 && fuzzySet_OfficialNames.get(countryNameProvided)[0][0] >= 0.7) {
+                matchedCountry = {
+                    country: fuzzySet_OfficialNames.get(countryNameProvided),
+                    source: 'official'
+                };
+            } else if (countryNameProvided.length === 2 && fuzzySet_cca2.get(countryNameProvided) && fuzzySet_cca2.get(countryNameProvided).length > 0 && fuzzySet_cca2.get(countryNameProvided)[0][0] >= 0.7) {
+                matchedCountry = {
+                    country: fuzzySet_cca2.get(countryNameProvided),
+                    source: 'cca2'
+                };
+            } else if (fuzzySet_cca3.get(countryNameProvided) && fuzzySet_cca3.get(countryNameProvided).length > 0 && fuzzySet_cca3.get(countryNameProvided)[0][0] >= 0.7) {
+                matchedCountry = {
+                    country: fuzzySet_cca3.get(countryNameProvided),
+                    source: 'cca3'
+                };
+            } else if (fuzzySet_capital.get(countryNameProvided) && fuzzySet_capital.get(countryNameProvided).length > 0 && fuzzySet_capital.get(countryNameProvided)[0][0] >= 0.7) {
+                matchedCountry = {
+                    country: fuzzySet_capital.get(countryNameProvided),
+                    source: 'capital'
+                };
+            } else if (fuzzySet_altSpellings.get(countryNameProvided) && fuzzySet_altSpellings.get(countryNameProvided).length > 0 && fuzzySet_altSpellings.get(countryNameProvided)[0][0] >= 0.7) {
+                matchedCountry = {
+                    country: fuzzySet_altSpellings.get(countryNameProvided),
+                    source: 'altSpelling'
+                };
+            }
+
+            // If the Fuzzysets above are not returning any result with a certainty over 0.7, the function is going to attempt to use Mistral to guess the country based on the data provided.
+            if (!matchedCountry) {
+                const chatResponse = await client.chat({
+                    model: 'mistral-small-latest',
+                    messages: [{
+                        role: 'user', content: `
                         You are provided with a string that could be a country name or related data.
                         This string may contain typos, errors, or be in a language other than English. Your task is to determine the most probable country associated with the string provided and return its 2-letter ISO 3166-1 alpha-2 (cca2) country code.
                         You should only return the 2-letter country code and nothing else, do not provide any comments nor notes, nor explanations of any kind.
@@ -141,43 +160,43 @@ const cleanedCountryCodes = async function () {
 
                             Input: "UnitStat."
                             Expected result from your side: US
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "Pérou"
                             Expected result from your side: PE
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "cihna"
                             Expected result from your side: CN
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "jApAAAAn"
                             Expected result from your side: JP
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "Korea, Souh"
                             Expected result from your side: KR
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "Audalia"
                             Expected result from your side: AU
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "IRL"
                             Expected result from your side: IE
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "London"
                             Expected result from your side: GB
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "澳门"
                             Expected result from your side: MO
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "Marokko"
                             Expected result from your side: MA
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "USA/CANADA"
                             Expected result from your side: null
@@ -187,78 +206,104 @@ const cleanedCountryCodes = async function () {
 
                             Input: "UA"
                             Expected result from your side: UA
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "FRFOS"
                             Expected result from your side: FR
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
                             Input: "Düsseldorf"
                             Expected result from your side: DE
-                            Expected result's lenght: 2
+                            Expected result's length: 2
 
-                        Your output will be used as an argument in a function, therefore, it is important to only return the 2-letter country code and nothing else, do not provide any comments nor notes, nor explanations of any kind, your response should only be 2 caracters long (or "null" when applicable) and it should not contain any single or double quotes.
-                        Ultimatly, if you are able to determine the country code associated with the string, your answer should only be 2 caracters long.
-                        Finally, here is the string you have to analyse: ${countryNameProvided}
-                    `}],
-                    });
+                        Your output will be used as an argument in a function, therefore, it is important to only return the 2-letter country code and nothing else, do not provide any comments nor notes, nor explanations of any kind, your response should only be 2 characters long (or "null" when applicable) and it should not contain any single or double quotes.
+                        Ultimately, if you are able to determine the country code associated with the string, your answer should only be 2 characters long.
+                        Finally, here is the string you have to analyze: ${countryNameProvided}
+                    `}]
+                });
 
-                    if (chatResponse.choices[0].message.content !== "null") {
-                        matchedCountry = {
-                            country: chatResponse.choices[0].message.content,
-                            source: 'mistral'
-                        }
-                    }
-
+                // Below we are parsing the response from Mistral to ensure it is a valid 2-letter country code.
+                // The if() statement below checks if the response from Mistral is a valid 2-letter country code and if it is, it assigns it to the bestCountryCodeProposal variable.
+                if (chatResponse.choices[0].message.content !== "null"
+                    && chatResponse.choices[0].message.content.length === 2
+                    && countriesDataSet.filter((country) => country.cca2 === chatResponse.choices[0].message.content).length > 0) {
+                    matchedCountry = {
+                        country: chatResponse.choices[0].message.content,
+                        source: 'mistral'
+                    };
                 }
 
-                if (!matchedCountry) {
-                    return result
-                }
+                // Here a time out is implemented to ensure that the function does not trigger a request rate limit from the Mistral API
+                // setTimeout(() => { }, 500);
+            }
 
-                const bestMatchProposal = matchedCountry && matchedCountry.source !== 'mistral' && matchedCountry.country[0][0] > 0.6 ? matchedCountry.country[0][1] : null
-                console.log('Currently processing the input with the following method: ', matchedCountry.source)
-                let bestCountryCodeProposal = null
-                switch (matchedCountry.source) {
-                    case 'common':
-                        bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.name.common === bestMatchProposal)[0].cca2 : null
-                        break;
-                    case 'official':
-                        bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.name.official === bestMatchProposal)[0].cca2 : null
-                        break;
-                    case 'cca2':
-                        bestCountryCodeProposal = bestMatchProposal ? bestMatchProposal : null
-                        break;
-                    case 'cca3':
-                        bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.cca3 === bestMatchProposal)[0].cca2 : null
-                        break;
-                    case 'capital':
-                        bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.capital.includes(bestMatchProposal))[0].cca2 : null
-                        break;
-                    case 'altSpelling':
-                        bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.altSpellings.includes(bestMatchProposal))[0].cca2 : null
-                        break;
-                    case 'mistral':
-                        bestCountryCodeProposal = matchedCountry.country
-                        break;
-                }
+            // Finally, below a fallback is implemented to ensure that if all process doesn't return a matchedCountry value,
+            // The result of the function would be the initially setup result object with the default null values.
+            // In case of 0 results, the function will return end therefore ends.
+            if (!matchedCountry) {
+                arrayOfResults.push(result);
+                continue;
+            }
 
-                result.guessedCountry = countriesDataSet.filter((country) => country.cca2 === bestCountryCodeProposal)[0]?.name.common
-                result.correspondance = matchedCountry.source !== 'mistral' ? bestMatchProposal : null
-                result.guessedCountryCode = bestCountryCodeProposal
-                result.source = matchedCountry.source
+            // If the function was able to determine the country associated with the string from the Excel, it will assign it to the bestCountryCodeProposal variable.
+            // The variable bestMatchProposal is the result of a ternary operator that checks if
+            // 1) There is indeed an actual match.
+            // 2) The result is not coming from Mistral (because Mistral returns directly the country code).
+            // 3) The confidence result coming from the Fuzzyset is above 0.7 (which is a good confidence level).
+            const bestMatchProposal = matchedCountry && matchedCountry.source !== 'mistral' && matchedCountry.country[0][0] >= 0.7 ? matchedCountry.country[0][1] : null;
+            console.log('Currently processing the input with the following method: ', matchedCountry.source);
 
-                return arrayOfResults.push(result)
-            })
-        );
+            // The 2-letter country code is then assigned to the bestCountryCodeProposal variable based on the source of the match.
+            // By default, the variable bestCountryCodeProposal is initialized and set to null, and is ready to be overwritten by the switch statement below.
+            let bestCountryCodeProposal = null;
+
+            // The switch statement below checks the source of the match and assigns the 2-letter country code to the bestCountryCodeProposal variable.
+            // If the source of the match is Mistral, then bestCountryCodeProposal is directly set to the match, without any further processing
+            // because Mistral returns directly the 2-letter cca2 country code.
+            switch (matchedCountry.source) {
+                case 'common':
+                    bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.name.common === bestMatchProposal)[0].cca2 : null;
+                    break;
+                case 'official':
+                    bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.name.official === bestMatchProposal)[0].cca2 : null;
+                    break;
+                case 'cca2':
+                    bestCountryCodeProposal = bestMatchProposal ? bestMatchProposal : null;
+                    break;
+                case 'cca3':
+                    bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.cca3 === bestMatchProposal)[0].cca2 : null;
+                    break;
+                case 'capital':
+                    bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.capital.includes(bestMatchProposal))[0].cca2 : null;
+                    break;
+                case 'altSpelling':
+                    bestCountryCodeProposal = bestMatchProposal ? countriesDataSet.filter((country) => country.altSpellings.includes(bestMatchProposal))[0].cca2 : null;
+                    break;
+                case 'mistral':
+                    bestCountryCodeProposal = matchedCountry.country;
+                    break;
+            }
+
+            // Once all the data processed and the bestCountryCodeProposal variable is set, the result object is updated with the new data.
+            result.guessedCountry = countriesDataSet.filter((country) => country.cca2 === bestCountryCodeProposal)[0]?.name.common;
+            result.correspondance = matchedCountry.source !== 'mistral' ? bestMatchProposal : null;
+            result.guessedCountryCode = bestCountryCodeProposal;
+            result.source = matchedCountry.source;
+
+            console.log('The result of the analysis is ', result);
+            // The result object is then pushed to the arrayOfResults array.
+            arrayOfResults.push(result);
+        }
     }
-    return arrayOfResults
-}
+    // Once all the rows of the Excel file have been processed, the function returns the arrayOfResults array.
+    return arrayOfResults;
+};
+
+// The arrayOfCleanedData variable is then set to the result of the call to the cleanCountryCodes function.
+const arrayOfCleanedData = await cleanedCountryCodes();
 
 
-const arrayOfCleanedData = await cleanedCountryCodes()
-
-console.log(arrayOfCleanedData)
+console.log('arrayOfCleanedData', arrayOfCleanedData)
 
 // Example of the returned value of arrayOfCleanedData:
 // [
@@ -289,14 +334,20 @@ console.log(arrayOfCleanedData)
 // ]
 
 // Below, to create and write on an Excel file, we are going to use the 'exceljs' library.
-
 // Create a new workbook.
 const workbook = new Excel.Workbook();
 
 // Add a new worksheet.
 const worksheet = workbook.addWorksheet('sheet_results');
 
-// Process the data to format it in an object
+// The function prodcueResultObject is defined below.
+// It takes as argument an array of objects, and returns an object with the following structure:
+// {
+//     columnHeaders:  ['Initial data', 'Column name', 'Correspondance', 'Guessed country', 'Guessed country code', 'Source'],
+//     columnData: arrayOfCleanedData.map(item => [item.initialData, item.columnName, item.correspondance, item.guessedCountry, item.guessedCountryCode, item.source]),
+// }
+// The function is called with the arrayOfCleanedData variable as argument, and the result is stored in the resultObject variable.
+
 const produceResultObject = function (arrayOfCleanedData) {
     const columnNames = [`Initial data`, ...new Set(arrayOfCleanedData.map(item => item.columnName))];
     const colData = [];
@@ -311,6 +362,8 @@ const produceResultObject = function (arrayOfCleanedData) {
 
 const resultObject = produceResultObject(arrayOfCleanedData);
 
+console.log('resultObject', resultObject);
+console.log('Content of resultObject.colData', JSON.stringify(resultObject.colData, null, 2));
 let columns = [];
 let rows = [];
 
@@ -405,7 +458,7 @@ cleanColumns.forEach(col => {
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
-                        fgColor: { argb: 'E7FFE7' },
+                        fgColor: { argb: cell.value ? 'CCFFCC' : 'FFCCCC' },
                     };
                 }
             });
