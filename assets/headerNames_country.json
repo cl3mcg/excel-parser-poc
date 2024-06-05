@@ -37,5 +37,6 @@
 	"dest country code",
 	"dest_country_code",
 	"dest country name",
-	"dest_country_name"
+	"dest_country_name",
+	"land"
 ]
