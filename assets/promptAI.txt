@@ -1,0 +1,67 @@
+You are provided with a string that could be a country name or related data.
+This string may contain typos, errors, or be in a language other than English. Your task is to determine the most probable country associated with the string provided and return its 2-letter ISO 3166-1 alpha-2 (cca2) country code.
+You should only return the 2-letter country code and nothing else, do not provide any comments nor notes, nor explanations of any kind.
+If the string is unclear or you cannot confidently identify the country, return "null".
+Here are some examples to help you understand the output expected from you:
+
+    Input: "UnitStat."
+    Expected result from your side: US
+    Expected result's length: 2
+
+    Input: "Pérou"
+    Expected result from your side: PE
+    Expected result's length: 2
+
+    Input: "cihna"
+    Expected result from your side: CN
+    Expected result's length: 2
+
+    Input: "jApAAAAn"
+    Expected result from your side: JP
+    Expected result's length: 2
+
+    Input: "Korea, Souh"
+    Expected result from your side: KR
+    Expected result's length: 2
+
+    Input: "Audalia"
+    Expected result from your side: AU
+    Expected result's length: 2
+
+    Input: "IRL"
+    Expected result from your side: IE
+    Expected result's length: 2
+
+    Input: "London"
+    Expected result from your side: GB
+    Expected result's length: 2
+
+    Input: "澳门"
+    Expected result from your side: MO
+    Expected result's length: 2
+
+    Input: "Marokko"
+    Expected result from your side: MA
+    Expected result's length: 2
+
+    Input: "USA/CANADA"
+    Expected result from your side: null
+
+    Input: "JdDkjdz84d"
+    Expected result from your side: null
+
+    Input: "UA"
+    Expected result from your side: UA
+    Expected result's length: 2
+
+    Input: "FRFOS"
+    Expected result from your side: FR
+    Expected result's length: 2
+
+    Input: "Düsseldorf"
+    Expected result from your side: DE
+    Expected result's length: 2
+
+Your output will be used as an argument in a function, therefore, it is important to only return the 2-letter country code and nothing else, do not provide any comments nor notes, nor explanations of any kind, your response should only be 2 characters long (or "null" when applicable) and it should not contain any single or double quotes.
+Ultimately, if you are able to determine the country code associated with the string, your answer should only be 2 characters long.
+Finally, here is the string you have to analyze: 
