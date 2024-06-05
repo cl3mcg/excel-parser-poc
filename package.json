@@ -1,21 +1,21 @@
 {
 	"name": "validator",
-	"version": "1.0.0",
-	"description": "",
-	"main": "app.js",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "vitest",
+		"start": "node app.js"
 	},
-	"author": "",
-	"license": "ISC",
+	"devDependencies": {
+		"vite": "^5.2.0",
+		"vitest": "^1.6.0"
+	},
 	"dependencies": {
-		"@mistralai/mistralai": "^0.3.0",
-		"country-data": "^0.0.31",
+		"@mistralai/mistralai": "^0.4.0",
 		"dotenv": "^16.4.5",
 		"exceljs": "^4.4.0",
 		"fuzzyset": "^1.0.7",
-		"read-excel-file": "^5.8.1",
 		"xlsx": "^0.18.5"
-	},
-	"type": "module"
+	}
 }
