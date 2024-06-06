@@ -20,12 +20,11 @@ const excelParse = function (fileName, targetTab) {
         sheet = workbookProvided.Sheets[targetTab] ? workbookProvided.Sheets[targetTab] : new Error;
         data = XLSX.utils.sheet_to_json(workbookProvided.Sheets[targetTab]) ? XLSX.utils.sheet_to_json(workbookProvided.Sheets[targetTab]) : new Error;
     } catch (error) {
-        console.error('🔺 Error reading the Excel file', error)
+        console.error('💥 Error reading the Excel file', error)
     }
 
 
     // Find the header row
-    // console.log('sheet', sheet)
     const headerRow = findHeaderRow(sheet);
     const headerRowIndex = headerRow - 1;
 
@@ -33,7 +32,7 @@ const excelParse = function (fileName, targetTab) {
     try {
         headerRow && headerRowIndex && headerRow > 0 && headerRowIndex >= 0 ? null : new Error
     } catch {
-        console.error('🔺 Error finding the header row', error)
+        console.error('💥 Error finding the header row', error)
     }
 
     try {
@@ -41,18 +40,14 @@ const excelParse = function (fileName, targetTab) {
         sheet = workbookProvided.Sheets[targetTab]
         data = XLSX.utils.sheet_to_json(workbookProvided.Sheets[targetTab], { range: headerRowIndex });
     } catch (error) {
-        console.error('🔺 Error reading the Excel file', error)
+        console.error('💥 Error reading the Excel file', error)
     }
 
 
     // // Create an array containing all the columns header names, without duplicate
-    // console.log('data', data)
     const allColumnsNamesArray = data.map(obj => Object.keys(obj)).flat()
-    // console.log('allColumnsNamesArray', allColumnsNamesArray)
     const uniqueSet = new Set(allColumnsNamesArray);
     const uniqueColumnsNamesArray = Array.from(uniqueSet);
-    // console.log('uniqueColumnsNamesArray', uniqueColumnsNamesArray)
-    // console.log(uniqueColumnsNamesArray)
     return {
         workbookProvided: workbookProvided,
         sheet: sheet,

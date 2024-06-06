@@ -29,8 +29,8 @@ const returnTheMostProbableCountryColumns = function (uniqueColumnsNamesArray) {
         console.log(`🎯 Multiple country columns have been identified: `, probabilityResult.filter(el => el.bestProbabilityResult >= 0.9).map(el => el.columnName))
         return probabilityResult.filter(el => el.bestProbabilityResult >= 0.9)
     }
-    console.log(`🎯 A single country columns have been identified: `, probabilityResult.sort((el1, el2) => el2.bestProbabilityResult - el1.bestProbabilityResult)[0])
-    return [probabilityResult.sort((el1, el2) => el2.bestProbabilityResult - el1.bestProbabilityResult)[0][columnName]]
+    console.log(`🎯 A single country column have been identified: `, [probabilityResult.sort((el1, el2) => el2.bestProbabilityResult - el1.bestProbabilityResult)[0].columnName])
+    return [probabilityResult.sort((el1, el2) => el2.bestProbabilityResult - el1.bestProbabilityResult)[0]]
 
     // Ultimatly, the returnTheMostProbableCountryColumns output has the following structure.
     // [

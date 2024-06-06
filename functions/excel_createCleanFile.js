@@ -70,9 +70,6 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
 
     const resultObject = produceResultObject(arrayOfCleanedData);
 
-    // console.log('resultObject', resultObject);
-    // console.log('Content of resultObject.colData', JSON.stringify(resultObject.colData, null, 2));
-
     // Below we declare 2 variables that will hold the content of the columns and the rows of the result file.
     let columns = [];
     let rows = [];
@@ -89,37 +86,22 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
         return letter;
     }
 
-    // The if() statement below is checking if there is only 1 single column to work on or not.
-    // If there is one single column, the work is done only once, ontherwise, a map method is used to work on each individual column identified.
-    if (resultObject.colData.length === 1) {
-        const columnName = resultObject.colData[0][0].columnName;
+    const columnNames = resultObject.colData.map(data => data[0].columnName);
+    columns = columnNames.flatMap(columnName => [
+        { header: columnName, key: columnName, name: columnName, filterButton: true },
+        { header: `Clean - ${columnName}`, key: `Clean - ${columnName}`, name: `Clean - ${columnName}`, filterButton: true },
+        { header: `Source - ${columnName}`, key: `Source - ${columnName}`, name: `Source - ${columnName}`, filterButton: true }
+    ]);
 
-        columns = [
-            { header: columnName, key: columnName, name: columnName, filterButton: true },
-            { header: `Clean - ${columnName}`, key: `Clean - ${columnName}`, name: `Clean - ${columnName}`, filterButton: true },
-            { header: `Source - ${columnName}`, key: `Source - ${columnName}`, name: `Source - ${columnName}`, filterButton: true }
-        ];
-
-        rows = resultObject.colData[0].map(data => [data.initialData, data.guessedCountryCode, data.source]);
-    } else {
-        const columnNames = resultObject.colData.map(data => data[0].columnName);
-
-        columns = columnNames.flatMap(columnName => [
-            { header: columnName, key: columnName, name: columnName, filterButton: true },
-            { header: `Clean - ${columnName}`, key: `Clean - ${columnName}`, name: `Clean - ${columnName}`, filterButton: true },
-            { header: `Source - ${columnName}`, key: `Source - ${columnName}`, name: `Source - ${columnName}`, filterButton: true }
-        ]);
-
-        // Populate rows correctly for all columns
-        for (let i = 0; i < resultObject.colData[0].length; i++) {
-            let row = [];
-            resultObject.colData.forEach(colData => {
-                row.push(colData[i].initialData);
-                row.push(colData[i].guessedCountryCode);
-                row.push(colData[i].source);
-            });
-            rows.push(row);
-        }
+    // Populate rows correctly for all columns
+    for (let i = 0; i < resultObject.colData[0].length; i++) {
+        let row = [];
+        resultObject.colData.forEach(colData => {
+            row.push(colData[i].initialData);
+            row.push(colData[i].guessedCountryCode);
+            row.push(colData[i].source);
+        });
+        rows.push(row);
     }
 
     // Add the table to the worksheet
@@ -146,17 +128,12 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
         columnKeyToLetter[col.key] = getExcelColumnLetter(colIndex - 1);
     });
 
-    // console.log('Clean Columns:', cleanColumns);
-    // console.log('Column Key to Letter Mapping:', columnKeyToLetter);
-
     // Iterate over each clean column
     cleanColumns.forEach(col => {
         try {
             // Get the column object from the worksheet using mapped letter
             const colLetter = columnKeyToLetter[col.key];
             const colObj = worksheet.getColumn(colLetter);
-
-            // console.log(`Processing column: ${col.key} (${colLetter})`);
 
             // Check if the column object is valid
             if (colObj) {
@@ -187,7 +164,7 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
         // Adding a small console.log() to indicate that the function has ran succesfully.
         console.log(`✅ The data has been cleaned and results are inside the 'results_${uniqueFileIdentifier}.xlsx' file`)
     } catch (error) {
-        console.error('🔺 Error writting the Excel file', error)
+        console.error('💥 Error writting the Excel file', error)
     }
 }
 

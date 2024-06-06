@@ -31,7 +31,7 @@ function findHeaderRow(sheet) {
         }
     }
 
-    console.log(`🎯 The header row is most likely: ${headerRow + 1}`);
+    // console.log(`🎯 The header row is most likely: ${headerRow + 1}`);
     return headerRow + 1;  // Convert 0-indexed row number to 1-indexed
 }
 

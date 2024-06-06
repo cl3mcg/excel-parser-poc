@@ -11,14 +11,17 @@ import callMistral from "./clean_callMistral.js"
 // The function is looping over the columns that have been identified as containing some country data and is cleaning the data based on various FuzzySets.
 // The source of the data is used to identify the original model that was used to clean the data and to be able to provide a more accurate result.
 const getCleanedCountryCodes = async function (mostProbableCountryColumns, excelData) {
+    console.log('🗺️ Now processing the country data...')
+    excelData.length > 50 ? console.log(`🕓 That's a lot of data ! Hold tight, it might take some time...`) : null;
+
     const arrayOfResults = [];
+
     for (const column of mostProbableCountryColumns) {
         // Processing the cleaning.
         // By default, the first cleaning step is going to attempt to match the Excel data with the various country Fuzzyset.
         for (const row of excelData) {
             const columnHeaderName = column.columnName;
             const countryNameProvided = row[`${columnHeaderName}`] ? row[`${columnHeaderName}`].trim().toLowerCase() : ''; // The data provided in the Excel is trimmed and lowercased to ensure consistency and to improve the matching accuracy.
-            // console.log('Currently processing the input: ', countryNameProvided);
             // Setting up the result object that will be pushed to the arrayOfResults array.
             // This result object will contain the data processed by the 3 cleaning steps below and the source of the data.
             const result = {
@@ -63,7 +66,6 @@ const getCleanedCountryCodes = async function (mostProbableCountryColumns, excel
             // 2) The result is not coming from Mistral (because Mistral returns directly the country code).
             // 3) The confidence result coming from the Fuzzyset is above 0.7 (which is a good confidence level).
             const bestMatchProposal = matchedCountry && matchedCountry.source !== 'mistral' && matchedCountry.country[0][0] >= 0.7 ? matchedCountry.country[0][1] : null;
-            // console.log('Currently processing the input with the following method: ', matchedCountry.source);
 
             // The 2-letter country code is then assigned to the bestCountryCodeProposal variable based on the source of the match.
             // By default, the variable bestCountryCodeProposal is initialized and set to null, and is ready to be overwritten by the switch statement below.
@@ -102,7 +104,6 @@ const getCleanedCountryCodes = async function (mostProbableCountryColumns, excel
             result.guessedCountryCode = bestCountryCodeProposal;
             result.source = matchedCountry.source;
 
-            // console.log('The result of the analysis is ', result);
             // The result object is then pushed to the arrayOfResults array.
             arrayOfResults.push(result);
         }
