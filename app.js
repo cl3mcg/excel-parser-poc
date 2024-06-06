@@ -6,16 +6,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Import the necessary functions
+import userChosenFile from "./functions/cli_chooseFile.js"
 import excelParse from "./functions/excel_parse.js"
 import returnTheMostProbableCountryColumns from "./functions/excel_returnTheMostProbableCountryColumns.js"
 import getCleanedCountryCodes from "./functions/country_cca2.js"
 import createCleanedExcelFile from "./functions/excel_createCleanFile.js"
 
 // Create a variable used to specify the path of the file to read and parse.
-const fileName = "./worksheets/BookToValidate01.xlsx"
+// const fileName = "./worksheets/BookToValidate01.xlsx"
+const userInput = await userChosenFile();
+const fileName = userInput.fileName;
+const targetTab = userInput.targetTab;
 
 // Create a variable to store the name of the targetted tab.
-const targetTab = "Book_01"
+// const targetTab = "Book_01"
 
 // Adding a small console.log() to indicate that the function is running.
 console.log('🧪 Processing the Excel file...')
