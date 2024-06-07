@@ -1,7 +1,57 @@
-// Import the necessary libraires
+// Import the necessary libraries
 import Excel from 'exceljs';
 
-// Define the function
+/**
+ * Creates a cleaned Excel file from an array of cleaned data objects.
+ * 
+ * This function takes an array of cleaned data, processes it, and generates an Excel file
+ * containing the cleaned data with appropriate formatting and styles. The file is saved with
+ * a unique identifier based on the current timestamp.
+ * 
+ * @async
+ * @function createCleanedExcelFile
+ * @param {Object[]} arrayOfCleanedData - An array of cleaned data objects with the following structure:
+ * - dataObject.columnName - The name of the column.
+ * - dataObject.initialData - The initial data provided.
+ * - dataObject.correspondance - The corrected value, if applicable.
+ * - dataObject.guessedCountry - The guessed country name, if applicable.
+ * - dataObject.guessedCountryCode - The guessed two-letter country code, if applicable.
+ * - dataObject.source - The source of the guessed country, if applicable.
+ * @returns {Promise<void>} A promise that resolves when the Excel file has been successfully created and saved.
+ * @throws Will throw an error if there is an issue with writing the Excel file.
+ * 
+ * @example
+ * const cleanedData = [
+ *   {
+ *     columnName: 'Country of Origin',
+ *     initialData: 'US/Canada',
+ *     correspondance: null,
+ *     guessedCountry: null,
+ *     guessedCountryCode: null,
+ *     source: null
+ *   },
+ *   {
+ *     columnName: 'Country of Origin',
+ *     initialData: 'Zimbabyoue',
+ *     correspondance: 'Zimbabwe',
+ *     guessedCountry: 'Zimbabwe',
+ *     guessedCountryCode: 'ZW',
+ *     source: 'common'
+ *   },
+ *   {
+ *     columnName: 'Dest Country',
+ *     initialData: 'SE- 59530 Mjölby',
+ *     correspondance: null,
+ *     guessedCountry: 'Sweden',
+ *     guessedCountryCode: 'SE',
+ *     source: 'mistral'
+ *   }
+ * ];
+ * 
+ * createCleanedExcelFile(cleanedData)
+ *   .then(() => console.log('Excel file created successfully.'))
+ *   .catch(error => console.error('Error creating Excel file:', error));
+ */
 const createCleanedExcelFile = async function (arrayOfCleanedData) {
     // Create a new workbook.
     const workbook = new Excel.Workbook();
@@ -9,53 +59,17 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
     // Add a new worksheet.
     const worksheet = workbook.addWorksheet('Cleaned Data');
 
-    // The function produceResultObject is defined below.
-    // It takes as argument an array of objects, and returns an object with the following structure:
-    // resultObject = {
-    //     columnHeaders: [ 'Initial data', 'Country of Origin', 'Dest Country' ],
-    //     colData: [ [ [Object], [Object] ], [ [Object], [Object] ] ]
-    //   }
-    // Content of resultObject.colData [
-    //     [
-    //       {
-    //         "columnName": "Country of Origin",
-    //         "initialData": "US/Canada",
-    //         "correspondance": null,
-    //         "guessedCountry": null,
-    //         "guessedCountryCode": null,
-    //         "source": null
-    //       },
-    //       {
-    //         "columnName": "Country of Origin",
-    //         "initialData": "Zimbabyoue",
-    //         "correspondance": "Zimbabwe",
-    //         "guessedCountry": "Zimbabwe",
-    //         "guessedCountryCode": "ZW",
-    //         "source": "common"
-    //       }
-    //     ],
-    //     [
-    //       {
-    //         "columnName": "Dest Country",
-    //         "initialData": "SE- 59530 Mjölby",
-    //         "correspondance": null,
-    //         "guessedCountry": "Sweden",
-    //         "guessedCountryCode": "SE",
-    //         "source": "mistral"
-    //       },
-    //       {
-    //         "columnName": "Dest Country",
-    //         "initialData": "9212 Lokeren, Belgium",
-    //         "correspondance": null,
-    //         "guessedCountry": "Belgium",
-    //         "guessedCountryCode": "BE",
-    //         "source": "mistral"
-    //       }
-    //     ]
-    //   ]
-    // The function is called with the arrayOfCleanedData variable as argument, and the result is stored in the resultObject variable.
-    // Inside the columnHeaders, a first value of 'Initial data' is hardcoded to get a clear comparison between the data initially provided and the result of the cleaning.
-
+    /**
+     * Produces a result object from an array of cleaned data.
+     * 
+     * This function takes an array of cleaned data objects and returns an object containing
+     * column headers and corresponding column data arrays.
+     * 
+     * @param {Object[]} arrayOfCleanedData - An array of cleaned data objects.
+     * @returns {Object} An object containing column headers and column data arrays.
+     * @property {string[]} columnHeaders - An array of column headers.
+     * @property {Object[][]} colData - An array of arrays, where each inner array contains cleaned data objects for a specific column.
+     */
     const produceResultObject = function (arrayOfCleanedData) {
         const columnNames = [`Initial data`, ...new Set(arrayOfCleanedData.map(item => item.columnName))];
         const colData = [];
@@ -70,13 +84,16 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
 
     const resultObject = produceResultObject(arrayOfCleanedData);
 
-    // Below we declare 2 variables that will hold the content of the columns and the rows of the result file.
+    // Declare variables to hold the content of the columns and rows of the result file.
     let columns = [];
     let rows = [];
 
-    // Helper function to convert index to Excel column letters
-    // This will be helpfull after when we need to identify columns by their position.
-    // This function was (obviously) provided by an LLM code assistant.
+    /**
+     * Converts a column index to an Excel column letter.
+     * 
+     * @param {number} index - The column index.
+     * @returns {string} The corresponding Excel column letter.
+     */
     function getExcelColumnLetter(index) {
         let letter = '';
         while (index >= 0) {
@@ -140,7 +157,7 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
                 // Iterate over each cell in the column, skipping the header row
                 colObj.eachCell({ includeEmpty: true }, (cell, rowNumber) => {
                     // Apply the desired styles to the cell if it is not in the header row
-                    // If a result is found, the cell is green, if failed, it is red
+                    // If a result is found, the cell is green; if failed, it is red
                     if (rowNumber > 1) {
                         cell.fill = {
                             type: 'pattern',
@@ -159,14 +176,14 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
 
     // Save the workbook to a file
     try {
-        const uniqueFileIdentifier = Date.now()
+        const uniqueFileIdentifier = Date.now();
         await workbook.xlsx.writeFile(`./results_${uniqueFileIdentifier}.xlsx`);
-        // Adding a small console.log() to indicate that the function has ran succesfully.
-        console.log(`✅ The data has been cleaned and results are inside the 'results_${uniqueFileIdentifier}.xlsx' file`)
+        // Adding a small console.log() to indicate that the function has run successfully.
+        console.log(`✅ The data has been cleaned and results are inside the 'results_${uniqueFileIdentifier}.xlsx' file`);
     } catch (error) {
-        console.error('💥 Error writting the Excel file', error)
+        console.error('💥 Error writing the Excel file', error);
     }
-}
+};
 
 // Export the function
-export default createCleanedExcelFile
+export default createCleanedExcelFile;

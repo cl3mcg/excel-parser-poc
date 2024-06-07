@@ -1,15 +1,21 @@
-// Import the necessary libraries.
-import dotenv from 'dotenv';
-dotenv.config();
+
+// Import necessary libraries.
 import countriesDataSet from "../assets/countries.json" assert { type: "json" };
 
-// Import the necessary function
+// Import the necessary functions.
 import fuzzyFind from "./clean_fuzzyFind.js"
 import callMistral from "./clean_callMistral.js"
 
-// The function below is going to clean the country data and return an array of objects containing the cleaned data and the source of the data.
-// The function is looping over the columns that have been identified as containing some country data and is cleaning the data based on various FuzzySets.
-// The source of the data is used to identify the original model that was used to clean the data and to be able to provide a more accurate result.
+
+/**
+ * Cleans the country data from an Excel file and returns an array of objects containing the cleaned data and the source of the data.
+ * @function getCleanedCountryCodes
+ * @async
+ * @param {Array<Object>} mostProbableCountryColumns - An array of objects containing the column names that have been identified as containing country data.
+ * @param {Array<Object>} excelData - An array of objects containing the data from the Excel file.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects containing the cleaned country data and the source of the data.
+ * @description This function cleans the country data and return an array of objects containing the cleaned data and the source of the data. The function is looping over the columns that have been identified as containing some country data and is cleaning the data based on various FuzzySets. The source of the data is used to identify the original model that was used to clean the data and to be able to provide a more accurate result.
+ */
 const getCleanedCountryCodes = async function (mostProbableCountryColumns, excelData) {
     console.log('🗺️ Now processing the country data...')
     excelData.length > 50 ? console.log(`🕓 That's a lot of data ! Hold tight, it might take some time...`) : null;
@@ -33,6 +39,14 @@ const getCleanedCountryCodes = async function (mostProbableCountryColumns, excel
                 source: null
             };
 
+            // The if() statement below checks if the data provided in the Excel is empty or not.
+            // If the data is empty, the result object is pushed to the arrayOfResults array and the loop continues to the next row,
+            // effectivevely bypassing any rows that do not have any data in it.
+            if (countryNameProvided.length <= 0) {
+                arrayOfResults.push(result)
+                continue
+            }
+
             // Below, the matchedCountry variable is going to be used to store the result of the matching process.
             // By default, its value is set to null. If a match is found, the matchedCountry variable will be updated with the result of the matching process.
             let matchedCountry = await fuzzyFind(countryNameProvided)
@@ -40,7 +54,6 @@ const getCleanedCountryCodes = async function (mostProbableCountryColumns, excel
             // If the Fuzzysets above are not returning any result with a certainty over 0.7, the function is going to attempt to use Mistral to guess the country based on the data provided.
             if (!matchedCountry) {
                 const chatResponse = await callMistral(countryNameProvided)
-
                 // Below we are parsing the response from Mistral to ensure it is a valid 2-letter country code.
                 // The if() statement below checks if the response from Mistral is a valid 2-letter country code and if it is, it assigns it to the bestCountryCodeProposal variable.
                 if (chatResponse) {
@@ -49,7 +62,8 @@ const getCleanedCountryCodes = async function (mostProbableCountryColumns, excel
                         source: 'mistral'
                     };
                 }
-
+                // Setup an artificial 250ms delay to avoid hitting Mistral's rate limit.
+                await new Promise(resolve => setTimeout(resolve, 250));
             }
 
             // Finally, below a fallback is implemented to ensure that if all process doesn't return a matchedCountry value,
