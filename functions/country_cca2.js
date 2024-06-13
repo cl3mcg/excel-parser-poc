@@ -12,11 +12,12 @@ import callMistral from "./clean_callMistral.js"
  * @function getCleanedCountryCodes
  * @async
  * @param {Array<Object>} mostProbableCountryColumns - An array of objects containing the column names that have been identified as containing country data.
+ * @param {Array<Object>} mostProbableLaneIdColumn - An array containing 1 single object containing the column name that have been identified as containing Lane ID data.
  * @param {Array<Object>} excelData - An array of objects containing the data from the Excel file.
  * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects containing the cleaned country data and the source of the data.
  * @description This function cleans the country data and return an array of objects containing the cleaned data and the source of the data. The function is looping over the columns that have been identified as containing some country data and is cleaning the data based on various FuzzySets. The source of the data is used to identify the original model that was used to clean the data and to be able to provide a more accurate result.
  */
-const getCleanedCountryCodes = async function (mostProbableCountryColumns, excelData) {
+const getCleanedCountryCodes = async function (mostProbableCountryColumns, mostProbableLaneIdColumn, excelData) {
     console.log('🗺️ Now processing the country data...')
     excelData.length > 50 ? console.log(`🕓 That's a lot of data ! Hold tight, it might take some time...`) : null;
 
@@ -31,6 +32,7 @@ const getCleanedCountryCodes = async function (mostProbableCountryColumns, excel
             // Setting up the result object that will be pushed to the arrayOfResults array.
             // This result object will contain the data processed by the 3 cleaning steps below and the source of the data.
             const result = {
+                laneId: `${row[mostProbableLaneIdColumn[0].columnName]}`,
                 columnName: column.columnName,
                 initialData: row[`${columnHeaderName}`] ? row[`${columnHeaderName}`].trim() : '',
                 correspondance: null,

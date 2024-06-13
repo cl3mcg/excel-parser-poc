@@ -23,6 +23,7 @@ import Excel from 'exceljs';
  * @example
  * const cleanedData = [
  *   {
+ *     laneId: 'A001', 
  *     columnName: 'Country of Origin',
  *     initialData: 'US/Canada',
  *     correspondance: null,
@@ -31,6 +32,7 @@ import Excel from 'exceljs';
  *     source: null
  *   },
  *   {
+ *     laneId: 'A002', 
  *     columnName: 'Country of Origin',
  *     initialData: 'Zimbabyoue',
  *     correspondance: 'Zimbabwe',
@@ -39,6 +41,7 @@ import Excel from 'exceljs';
  *     source: 'common'
  *   },
  *   {
+ *     laneId: 'A002',
  *     columnName: 'Dest Country',
  *     initialData: 'SE- 59530 Mjölby',
  *     correspondance: null,
@@ -103,23 +106,32 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
         return letter;
     }
 
+    // Add 'Lane ID' column
+    columns.push({ header: 'Lane ID', key: 'laneId', name: 'Lane ID', filterButton: true });
+
     const columnNames = resultObject.colData.map(data => data[0].columnName);
-    columns = columnNames.flatMap(columnName => [
+    columns = columns.concat(columnNames.flatMap(columnName => [
         { header: columnName, key: columnName, name: columnName, filterButton: true },
         { header: `Clean - ${columnName}`, key: `Clean - ${columnName}`, name: `Clean - ${columnName}`, filterButton: true },
         { header: `Source - ${columnName}`, key: `Source - ${columnName}`, name: `Source - ${columnName}`, filterButton: true }
-    ]);
+    ]));
 
     // Populate rows correctly for all columns
-    for (let i = 0; i < resultObject.colData[0].length; i++) {
-        let row = [];
+    const laneIds = [...new Set(arrayOfCleanedData.map(item => item.laneId ? item.laneId : `_${Date.now()}`))];
+    laneIds.forEach(laneId => {
+        let row = [laneId];
         resultObject.colData.forEach(colData => {
-            row.push(colData[i].initialData);
-            row.push(colData[i].guessedCountryCode);
-            row.push(colData[i].source);
+            const item = colData.find(data => data.laneId === laneId);
+            if (item) {
+                row.push(item.initialData);
+                row.push(item.guessedCountryCode);
+                row.push(item.source);
+            } else {
+                row.push(null); // Fill with null if no data for this laneId
+            }
         });
         rows.push(row);
-    }
+    });
 
     // Add the table to the worksheet
     worksheet.addTable({

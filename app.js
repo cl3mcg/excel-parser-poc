@@ -9,6 +9,7 @@ dotenv.config();
 // Import the necessary functions
 import userChosenFile from "./functions/cli_chooseFile.js"
 import excelParse from "./functions/excel_parse.js"
+import returnTheMostProbableLaneIdColumn from './functions/excel_returnTheMostProbableLaneIdColumn.js';
 import returnTheMostProbableCountryColumns from "./functions/excel_returnTheMostProbableCountryColumns.js"
 import getCleanedCountryCodes from "./functions/country_cca2.js"
 import createCleanedExcelFile from "./functions/excel_createCleanFile.js"
@@ -32,8 +33,9 @@ console.log('🧪 Processing the Excel file...')
 
 const excelParsed = excelParse(fileName, targetTab);
 const uniqueColumnsNamesArray = excelParsed.uniqueColumnsNamesArray;
+const mostProbableLaneIdColumn = returnTheMostProbableLaneIdColumn(uniqueColumnsNamesArray);
 const mostProbableCountryColumns = returnTheMostProbableCountryColumns(uniqueColumnsNamesArray);
-const arrayOfCleanedData = await getCleanedCountryCodes(mostProbableCountryColumns, excelParsed.data)
+const arrayOfCleanedData = await getCleanedCountryCodes(mostProbableCountryColumns, mostProbableLaneIdColumn, excelParsed.data)
 
 // Example of the returned value of arrayOfCleanedData:
 // [

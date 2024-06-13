@@ -43,6 +43,7 @@ assets/*.json
 # Include the exceptions
 !assets/countries.json
 !assets/headerNames_country.json
+!assets/headerNames_lane_id.json
 
 # Exclude all files in the worksheet folder that are not strictly necessary for the app and 
 worksheets/*.xlsx
