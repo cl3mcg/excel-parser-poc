@@ -1,11 +1,6 @@
 // Start the script
 console.log('🌞 Starting Node.js process...');
 
-// Import the necessary libraries
-import dotenv from 'dotenv';
-dotenv.config();
-
-
 // Import the necessary functions
 import userChosenFile from "./functions/cli_chooseFile.js"
 import excelParse from "./functions/excel_parse.js"
@@ -15,16 +10,26 @@ import getCleanedCountryCodes from "./functions/country_cca2.js"
 import createCleanedExcelFile from "./functions/excel_createCleanFile.js"
 
 /**
- * Call the CLI script to prompt users their choice of Excel file and spreadsheet tab
- * @type {Object} userInput - An object containing the following properties:
- * @type {string} userInput.fileName - The name of the selected Excel file
- * @type {string} userInput.targetTab - The name of the selected spreadsheet tab
- * @type {string} fileName - The name of the selected Excel file
- * @type {string} targetTab - The name of the selected spreadsheet tab
+ * Call the CLI script to prompt users for their choice of Excel file and spreadsheet tab.
+ * 
+ * @returns {Promise<Object>} A promise that resolves to an object containing the selected file name and spreadsheet tab.
+ * @property {string} fileName - The name of the selected Excel file.
+ * @property {string} targetTab - The name of the selected spreadsheet tab.
  */
 const userInput = await userChosenFile();
+
+/**
+ * The name of the selected Excel file.
+ * @type {string}
+ */
 const fileName = userInput.fileName;
+
+/**
+ * The name of the selected spreadsheet tab.
+ * @type {string}
+ */
 const targetTab = userInput.targetTab;
+
 
 // Adding a small console.log() to indicate that the function is running.
 console.log('🧪 Processing the Excel file...')

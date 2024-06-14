@@ -12,9 +12,9 @@ const aiModel = process.env.MISTRAL_MODEL || null;
 
 /**
  * Imports necessary environment variables.
- * @type {string|null} apiKey - The API key for Mistral AI, or null if not provided.
+ * @type {string|undefined} apiKey - The API key for Mistral AI, or null if not provided.
  */
-const apiKey = process.env.MISTRAL_API_KEY || null;
+const apiKey = process.env.MISTRAL_API_KEY;
 
 // Defining the necessary variables
 import countriesDataSet from "../assets/countries.json" assert { type: "json" };
@@ -48,11 +48,12 @@ const callMistral = async function (countryNameProvided) {
 
     try {
         /**
-         * Sends a chat message to the Mistral AI client with the provided country name.
-         * @type {Object} chatResponse - The response object from the AI client.
-         * @property {Array} chatResponse.choices - Array of response choices.
-         * @property {Object} chatResponse.choices[0].message - The message object of the first choice.
-         * @property {string} chatResponse.choices[0].message.content - The content of the response message.
+         * Sends a chat message to the Mistral AI client, including the specified country name.
+         * This function awaits the response from the AI client and stores it in the chatResponse object.
+         * @returns {Object} chatResponse - The response object received from the AI client.
+         * @property {Array<Object>} chatResponse.choices - An array containing the response choices provided by the AI client.
+         * @property {Object} chatResponse.choices[0].message - The message object of the first response choice.
+         * @property {string} chatResponse.choices[0].message.content - The content of the response message from the first choice.
          */
         const chatResponse = await client.chat({
             model: aiModel,
@@ -60,12 +61,13 @@ const callMistral = async function (countryNameProvided) {
         });
 
         /**
-         * Validates the AI response content.
-         * @returns {string|null} The two-letter country code if valid, otherwise null.
+         * The AI response content.
+         * @type {string|null} The two-letter country code if valid, otherwise null.
          */
         const aiResponse = chatResponse.choices[0].message.content;
 
-        if (aiResponse !== "null"
+        if (aiResponse
+            && aiResponse !== "null"
             && aiResponse.length === 2
             && countriesDataSet.some(country => country.cca2 === aiResponse)) {
             return aiResponse;

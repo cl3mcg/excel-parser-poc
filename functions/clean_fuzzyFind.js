@@ -39,7 +39,6 @@ const country_capital = countriesDataSet.map(countryData => countryData.capital)
  */
 const country_altSpellings = countriesDataSet.map(countryData => countryData.altSpellings).flat();
 
-
 /**
  * Set up a FuzzySet to perform matching based on various factors.
  * 
@@ -48,7 +47,7 @@ const country_altSpellings = countriesDataSet.map(countryData => countryData.alt
  * 
  * @type {FuzzySet} fuzzySet_CommonNames - FuzzySet for common country names.
  */
-const fuzzySet_CommonNames = new FuzzySet(country_CommonNames);
+const fuzzySet_CommonNames = FuzzySet(country_CommonNames);
 /**
  * Set up a FuzzySet to perform matching based on various factors.
  * FuzzySet is a data structure that performs approximate string matching and determines likely misspellings.
@@ -56,7 +55,7 @@ const fuzzySet_CommonNames = new FuzzySet(country_CommonNames);
  * 
  * @type {FuzzySet} fuzzySet_OfficialNames - FuzzySet for official country names.
  */
-const fuzzySet_OfficialNames = new FuzzySet(country_OfficialNames);
+const fuzzySet_OfficialNames = FuzzySet(country_OfficialNames);
 /**
  * Set up a FuzzySet to perform matching based on various factors.
  * FuzzySet is a data structure that performs approximate string matching and determines likely misspellings.
@@ -64,7 +63,7 @@ const fuzzySet_OfficialNames = new FuzzySet(country_OfficialNames);
  * 
  * @type {FuzzySet} fuzzySet_cca2 - FuzzySet for two-letter country codes (CCA2).
  */
-const fuzzySet_cca2 = new FuzzySet(country_cca2);
+const fuzzySet_cca2 = FuzzySet(country_cca2);
 /**
  * Set up a FuzzySet to perform matching based on various factors.
  * FuzzySet is a data structure that performs approximate string matching and determines likely misspellings.
@@ -72,7 +71,7 @@ const fuzzySet_cca2 = new FuzzySet(country_cca2);
  * 
  * @type {FuzzySet} fuzzySet_cca3 - FuzzySet for three-letter country codes (CCA3).
  */
-const fuzzySet_cca3 = new FuzzySet(country_cca3);
+const fuzzySet_cca3 = FuzzySet(country_cca3);
 /**
  * Set up a FuzzySet to perform matching based on various factors.
  * FuzzySet is a data structure that performs approximate string matching and determines likely misspellings.
@@ -80,7 +79,7 @@ const fuzzySet_cca3 = new FuzzySet(country_cca3);
  * 
  * @type {FuzzySet} fuzzySet_capital - FuzzySet for capital cities of countries.
  */
-const fuzzySet_capital = new FuzzySet(country_capital);
+const fuzzySet_capital = FuzzySet(country_capital);
 /**
  * Set up a FuzzySet to perform matching based on various factors.
  * FuzzySet is a data structure that performs approximate string matching and determines likely misspellings.
@@ -88,8 +87,7 @@ const fuzzySet_capital = new FuzzySet(country_capital);
  * 
  * @type {FuzzySet} fuzzySet_altSpellings - FuzzySet for alternative spellings of country names.
  */
-const fuzzySet_altSpellings = new FuzzySet(country_altSpellings);
-
+const fuzzySet_altSpellings = FuzzySet(country_altSpellings);
 
 /**
  * fuzzyFind finds a country based on the provided name or code.
@@ -109,37 +107,20 @@ const fuzzySet_altSpellings = new FuzzySet(country_altSpellings);
 const fuzzyFind = async function (countryNameProvided) {
     let matchedCountry = null;
 
-    if (fuzzySet_CommonNames.get(countryNameProvided) && fuzzySet_CommonNames.get(countryNameProvided).length > 0 && fuzzySet_CommonNames.get(countryNameProvided)[0][0] >= 0.7) {
-        matchedCountry = {
-            country: fuzzySet_CommonNames.get(countryNameProvided),
-            source: 'common'
-        };
-    } else if (fuzzySet_OfficialNames.get(countryNameProvided) && fuzzySet_OfficialNames.get(countryNameProvided).length > 0 && fuzzySet_OfficialNames.get(countryNameProvided)[0][0] >= 0.7) {
-        matchedCountry = {
-            country: fuzzySet_OfficialNames.get(countryNameProvided),
-            source: 'official'
-        };
-    } else if (countryNameProvided.length === 2 && fuzzySet_cca2.get(countryNameProvided) && fuzzySet_cca2.get(countryNameProvided).length > 0 && fuzzySet_cca2.get(countryNameProvided)[0][0] >= 0.7) {
-        matchedCountry = {
-            country: fuzzySet_cca2.get(countryNameProvided),
-            source: 'cca2'
-        };
-    } else if (fuzzySet_cca3.get(countryNameProvided) && fuzzySet_cca3.get(countryNameProvided).length > 0 && fuzzySet_cca3.get(countryNameProvided)[0][0] >= 0.7) {
-        matchedCountry = {
-            country: fuzzySet_cca3.get(countryNameProvided),
-            source: 'cca3'
-        };
-    } else if (fuzzySet_capital.get(countryNameProvided) && fuzzySet_capital.get(countryNameProvided).length > 0 && fuzzySet_capital.get(countryNameProvided)[0][0] >= 0.7) {
-        matchedCountry = {
-            country: fuzzySet_capital.get(countryNameProvided),
-            source: 'capital'
-        };
-    } else if (fuzzySet_altSpellings.get(countryNameProvided) && fuzzySet_altSpellings.get(countryNameProvided).length > 0 && fuzzySet_altSpellings.get(countryNameProvided)[0][0] >= 0.7) {
-        matchedCountry = {
-            country: fuzzySet_altSpellings.get(countryNameProvided),
-            source: 'altSpelling'
-        };
-    }
+    const checkMatch = (fuzzySet, source) => {
+        const result = fuzzySet.get(countryNameProvided);
+        if (result && result.length > 0 && result[0][0] >= 0.7) {
+            return { country: result, source };
+        }
+        return null;
+    };
+
+    matchedCountry = checkMatch(fuzzySet_CommonNames, 'common')
+        || checkMatch(fuzzySet_OfficialNames, 'official')
+        || (countryNameProvided.length === 2 ? checkMatch(fuzzySet_cca2, 'cca2') : null)
+        || checkMatch(fuzzySet_cca3, 'cca3')
+        || checkMatch(fuzzySet_capital, 'capital')
+        || checkMatch(fuzzySet_altSpellings, 'altSpelling');
 
     return matchedCountry;
 };

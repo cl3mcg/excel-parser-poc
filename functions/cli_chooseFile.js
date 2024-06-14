@@ -10,9 +10,9 @@ import XLSX from "xlsx";
 /**
  * Imports necessary environment variables
  * Retrieves the password for the Transporeon sheet from environment variables.
- * @type {string|null}
+ * @type {string|undefined}
  */
-const transporeonSheetPassword = process.env.TRANSPOREON_SHEET_PASSWORD || null;
+const transporeonSheetPassword = process.env.TRANSPOREON_SHEET_PASSWORD;
 
 /**
  * Gets the current module's directory path.

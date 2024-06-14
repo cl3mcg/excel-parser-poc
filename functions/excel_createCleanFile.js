@@ -2,23 +2,30 @@
 import Excel from 'exceljs';
 
 /**
+ * Represents a cleaned data object.
+ * @typedef {Object} CleanedDataObject
+ * @property {string} laneId - The lane ID of the data object.
+ * @property {string} columnName - The name of the column containing the data object.
+ * @property {string} initialData - The initial data value of the data object.
+ * @property {string | null} correspondance - The correspondance value of the data object, if available.
+ * @property {string | null} guessedCountry - The guessed country value of the data object, if available.
+ * @property {string | null} guessedCountryCode - The guessed country code value of the data object, if available.
+ * @property {string | null} source - The source value of the data object, if available.
+*/
+
+/**
  * Creates a cleaned Excel file from an array of cleaned data objects.
- * 
+ *
  * This function takes an array of cleaned data, processes it, and generates an Excel file
  * containing the cleaned data with appropriate formatting and styles. The file is saved with
  * a unique identifier based on the current timestamp.
- * 
+ *
  * @async
  * @function createCleanedExcelFile
- * @param {Object[]} arrayOfCleanedData - An array of cleaned data objects with the following structure:
- * - dataObject.columnName - The name of the column.
- * - dataObject.initialData - The initial data provided.
- * - dataObject.correspondance - The corrected value, if applicable.
- * - dataObject.guessedCountry - The guessed country name, if applicable.
- * - dataObject.guessedCountryCode - The guessed two-letter country code, if applicable.
- * - dataObject.source - The source of the guessed country, if applicable.
+ * @param {CleanedDataObject[]} arrayOfCleanedData - An array of cleaned data objects.
  * @returns {Promise<void>} A promise that resolves when the Excel file has been successfully created and saved.
  * @throws Will throw an error if there is an issue with writing the Excel file.
+ *
  * 
  * @example
  * const cleanedData = [
@@ -54,7 +61,8 @@ import Excel from 'exceljs';
  * createCleanedExcelFile(cleanedData)
  *   .then(() => console.log('Excel file created successfully.'))
  *   .catch(error => console.error('Error creating Excel file:', error));
- */
+*/
+
 const createCleanedExcelFile = async function (arrayOfCleanedData) {
     // Create a new workbook.
     const workbook = new Excel.Workbook();
@@ -127,7 +135,7 @@ const createCleanedExcelFile = async function (arrayOfCleanedData) {
                 row.push(item.guessedCountryCode);
                 row.push(item.source);
             } else {
-                row.push(null); // Fill with null if no data for this laneId
+                row.push(''); // Fill with An empty space if no data for this laneId
             }
         });
         rows.push(row);
